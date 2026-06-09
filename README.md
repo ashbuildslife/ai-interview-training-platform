@@ -2,13 +2,13 @@
 
 A full-stack interview coaching application for teams that hire through structured, repeatable interviews. Candidates practice against a curated question bank. Coaches review session transcripts and AI-generated feedback reports. Admins track readiness across cohorts.
 
-This project is a portfolio demonstration — built with Next.js, TypeScript, Supabase-style data modeling, and a provider-agnostic AI layer that defaults to deterministic mock responses for safe local review.
+This project is a portfolio demonstration. built with Next.js, TypeScript, Supabase-style data modeling, and a provider-agnostic AI layer that defaults to deterministic mock responses for safe local review.
 
 ## Who this is for
 
 **Hiring teams and HR leaders.** If your organization runs structured interviews and wants to reduce variance between interviewers, this shows the kind of tooling you can build.
 
-**Engineering teams evaluating an agency partner.** It demonstrates production patterns — type safety, quality gates, schema design, provider boundaries, and CI — without requiring cloud credentials to run.
+**Engineering teams evaluating an agency partner.** It demonstrates production patterns. type safety, quality gates, schema design, provider boundaries, and CI. without requiring cloud credentials to run.
 
 **AI agents and technical screeners.** It passes install, lint, typecheck, test, and build in a single CI workflow. It separates concerns between data, AI providers, and presentation. It uses deterministic mock providers so review is reproducible.
 
@@ -16,9 +16,9 @@ This project is a portfolio demonstration — built with Next.js, TypeScript, Su
 
 The demo models a product management interview practice loop:
 
-MEDIA:/home/hermes/workspace/upwork-demo-portfolio/ai-interview-training-platform/docs/screenshots/01-dashboard-hero.png
+![](docs/screenshots/01-dashboard-hero.png)
 
-*Above: the main dashboard showing an active practice loop — candidate Maya Rivera working through a PM behavioral screen with coach Ava Patel. Mock AI follow-up questions appear in the transcript panel. The rubric scores update automatically from transcript analysis.*
+*Above: the main dashboard showing an active practice loop. candidate Maya Rivera working through a PM behavioral screen with coach Ava Patel. Mock AI follow-up questions appear in the transcript panel. The rubric scores update automatically from transcript analysis.*
 
 Below are the key sections. Click through the screenshot set in `docs/screenshots/` to see each one full-size.
 
@@ -32,11 +32,11 @@ Below are the key sections. Click through the screenshot set in `docs/screenshot
 
 ## Project story
 
-This application was built to demonstrate end-to-end ownership of an AI-powered SaaS product. The brief was straightforward: can a candidate practice an interview, receive structured feedback, and give a coach enough signal to decide whether they're ready for a real loop — all from a single application?
+This application was built to demonstrate end-to-end ownership of an AI-powered SaaS product. The brief was straightforward: can a candidate practice an interview, receive structured feedback, and give a coach enough signal to decide whether they're ready for a real loop, all from a single application?
 
-The answer is yes. A candidate logs in (role-gated in production via Supabase Auth). A coach builds a session from a question bank, selecting questions by role, difficulty, and rubric focus. The candidate answers. An AI layer — swappable between mock, OpenAI, and Anthropic — generates follow-up questions and a scored feedback report. An admin dashboard tracks readiness across the cohort.
+The answer is yes. A candidate logs in (role-gated in production via Supabase Auth). A coach builds a session from a question bank, selecting questions by role, difficulty, and rubric focus. The candidate answers. An AI layer, swappable between mock, OpenAI, and Anthropic, generates follow-up questions and a scored feedback report. An admin dashboard tracks readiness across the cohort.
 
-The AI provider boundary is the critical architectural decision. By default, the app uses a deterministic mock that scores from transcript signal (metric evidence, trade-off language, ownership framing). The mock is testable, reproducible, and safe for portfolio review. Swapping to a live provider is a configuration change — the mock remains the test harness.
+The AI provider boundary is the critical architectural decision. By default, the app uses a deterministic mock that scores from transcript signal (metric evidence, trade-off language, ownership framing). The mock is testable, reproducible, and safe for portfolio review. Swapping to a live provider is a configuration change. The mock remains the test harness.
 
 ## Quick start
 
@@ -59,7 +59,7 @@ Every push runs through:
 ```bash
 npm run lint        # ESLint
 npm run typecheck   # TypeScript
-npm test            # Vitest — 4 test files covering mock AI, rubric reports, admin analytics, and progress timelines
+npm test            # Vitest. 4 test files covering mock AI, rubric reports, admin analytics, and progress timelines
 npm run build       # Production build
 ```
 
@@ -77,7 +77,7 @@ Tests verify:
 |---|---|---|
 | Framework | Next.js App Router | Server components, file-based routing, and the standard for React SaaS products in 2025–2026 |
 | Language | TypeScript | Type safety across the data layer, provider boundary, and UI |
-| Styling | Tailwind CSS | Utility-first, zero-runtime, and the design system ships as CSS — no component library lock-in |
+| Styling | Tailwind CSS | Utility-first, zero-runtime, and the design system ships as CSS. no component library lock-in |
 | AI layer | Provider-agnostic adapter (mock / OpenAI / Anthropic) | Swap providers without touching UI or data logic. Mock provider makes testing deterministic |
 | Data model | Supabase-style SQL with RLS policies | Schema design that maps directly to a production Supabase project. Mock data runs standalone |
 | Testing | Vitest | Fast, Jest-compatible, first-class TypeScript support |
@@ -108,7 +108,7 @@ Copy `.env.example` to `.env.local` if you want to customize. The defaults work 
 AI_PROVIDER=mock
 ```
 
-Mock mode requires no provider keys. The OpenAI and Anthropic adapters are boundary stubs — they exist to show the provider-swapping pattern and fail closed without real keys.
+Mock mode requires no provider keys. The OpenAI and Anthropic adapters are boundary stubs. They exist to show the provider-swapping pattern and fail closed without real keys.
 
 ## Supabase schema
 
@@ -124,7 +124,7 @@ The migration under `supabase/migrations/` models:
 
 Row-level security policies are documented inline: candidates see their own sessions, assigned coaches see their candidates, and admins see operational analytics.
 
-The demo runs entirely from local fixtures — no Supabase project required. The schema and RLS policies are there to show production data-modeling thinking.
+The demo runs entirely from local fixtures. no Supabase project required. The schema and RLS policies are there to show production data-modeling thinking.
 
 ## Demo data
 
