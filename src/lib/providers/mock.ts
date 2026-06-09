@@ -51,6 +51,27 @@ function buildRubricScores(transcript: TranscriptTurn[]): RubricScore[] {
   }));
 }
 
+const SCRIPTED_PATTERNS = [
+  /\b(?:leveraged synergies|drove alignment|passionate about|circle back|deep dive|move the needle|low-hanging fruit|boil the ocean|thought leadership)\b/i,
+  /\b(?:I believe that |What I would say is |In my experience, I've always )/gi
+];
+
+function detectScriptedLanguage(transcript: TranscriptTurn[]): string | null {
+  const candidateText = transcript
+    .filter((turn) => turn.speaker === "candidate")
+    .map((turn) => turn.text)
+    .join(" ");
+
+  const hits = SCRIPTED_PATTERNS
+    .flatMap((pattern) => candidateText.match(pattern) ?? [])
+    .filter((hit) => hit.length > 0);
+
+  if (hits.length === 0) return null;
+
+  const phrases = hits.map((hit) => `"${hit}"`).join(", ");
+  return `Detected ${hits.length} scripted-sounding phrase(s): ${phrases}. Answers may sound rehearsed or AI-polished rather than authentic.`;
+}
+
 export function createMockInterviewAiProvider(): InterviewAiProvider {
   return {
     provider: "mock",
@@ -75,6 +96,16 @@ export function createMockInterviewAiProvider(): InterviewAiProvider {
       const rubricScores = buildRubricScores(request.transcript);
       const total = rubricScores.reduce((sum, score) => sum + score.score, 0);
 
+      const risks: string[] = [
+        "Opening setup runs long before the action/result appears.",
+        "Could make the rejected alternative and stakeholder alignment clearer."
+      ];
+
+      const scriptedFlag = detectScriptedLanguage(request.transcript);
+      if (scriptedFlag) {
+        risks.push(scriptedFlag);
+      }
+
       return {
         sessionId: request.session.id,
         generatedAt: "2026-06-04T19:55:00Z",
@@ -86,10 +117,7 @@ export function createMockInterviewAiProvider(): InterviewAiProvider {
           "Connects ownership to a shipped product change and measurable time-to-value improvement.",
           "Responds well to follow-up pressure about trade-offs."
         ],
-        risks: [
-          "Opening setup runs long before the action/result appears.",
-          "Could make the rejected alternative and stakeholder alignment clearer."
-        ],
+        risks,
         recommendedPractice:
           "Practice a 90-second STAR answer: Situation in one sentence, Task/decision in one sentence, Action with one trade-off, Result with one metric, then one reflection. Record two reps before the next coach review.",
         rubricScores
