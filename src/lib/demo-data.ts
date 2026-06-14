@@ -32,6 +32,11 @@ export const demoCandidates: CandidateProfile[] = [
     targetRole: "Product Manager",
     cohort: "June AI SaaS cohort",
     coachId: "coach_ava",
+    practiceContext: {
+      interviewFormat: "strategy_panel",
+      jobDescriptionSignals: ["activation analytics", "AI onboarding experimentation", "cross-functional prioritization"],
+      resumeEvidenceAnchors: ["first-invoice activation lift", "self-serve versus coached onboarding trade-off"]
+    },
     readinessScore: 88,
     lastActiveAt: "2026-05-30T15:30:00Z"
   },
@@ -42,6 +47,11 @@ export const demoCandidates: CandidateProfile[] = [
     targetRole: "Full Stack Engineer",
     cohort: "June AI SaaS cohort",
     coachId: "coach_omar",
+    practiceContext: {
+      interviewFormat: "technical_loop",
+      jobDescriptionSignals: ["secure provider boundaries", "low-latency scoring", "Supabase RLS ownership"],
+      resumeEvidenceAnchors: ["transcript scoring architecture", "provider-key isolation plan"]
+    },
     readinessScore: 84,
     lastActiveAt: "2026-05-27T18:00:00Z"
   },
@@ -52,6 +62,11 @@ export const demoCandidates: CandidateProfile[] = [
     targetRole: "Product Manager",
     cohort: "Founders returning to PM",
     coachId: "coach_ava",
+    practiceContext: {
+      interviewFormat: "behavioral_loop",
+      jobDescriptionSignals: ["founder-to-PM storytelling", "metric ownership", "coachability under pressure"],
+      resumeEvidenceAnchors: ["founder operating cadence", "post-feedback practice plan"]
+    },
     readinessScore: 78,
     lastActiveAt: "2026-05-28T19:15:00Z"
   }

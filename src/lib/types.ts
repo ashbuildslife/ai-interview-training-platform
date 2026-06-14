@@ -9,8 +9,15 @@ export interface CandidateProfile {
   targetRole: string;
   cohort: string;
   coachId: string;
+  practiceContext: CandidatePracticeContext;
   readinessScore: number;
   lastActiveAt: string;
+}
+
+export interface CandidatePracticeContext {
+  interviewFormat: "recruiter_screen" | "behavioral_loop" | "technical_loop" | "strategy_panel";
+  jobDescriptionSignals: string[];
+  resumeEvidenceAnchors: string[];
 }
 
 export interface CoachProfile {

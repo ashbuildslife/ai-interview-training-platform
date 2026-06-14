@@ -203,6 +203,15 @@ export default async function Home() {
                   <Badge tone={candidate.readinessScore >= 84 ? "green" : "amber"}>{candidate.readinessScore}% ready</Badge>
                 </div>
                 <div className="mt-3"><ProgressBar value={candidate.readinessScore} /></div>
+                <p className="mt-3 text-xs font-semibold uppercase tracking-wide text-slate-400">Context anchors</p>
+                <ul className="mt-2 space-y-1 text-xs leading-5 text-slate-600">
+                  {candidate.practiceContext.jobDescriptionSignals.slice(0, 2).map((signal) => (
+                    <li key={`${candidate.id}-${signal}`}>• {signal}</li>
+                  ))}
+                </ul>
+                <p className="mt-3 text-xs leading-5 text-slate-500">
+                  Format: {candidate.practiceContext.interviewFormat.replaceAll("_", " ")} · Proof: {candidate.practiceContext.resumeEvidenceAnchors[0]}
+                </p>
               </div>
             ))}
           </div>

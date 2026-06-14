@@ -29,4 +29,13 @@ describe("admin analytics", () => {
       { date: "2026-05-29", score: 88, label: "PM product strategy loop" }
     ]);
   });
+
+  it("keeps candidates anchored to job-specific signals and resume evidence", () => {
+    for (const candidate of demoCandidates) {
+      expect(candidate.practiceContext.jobDescriptionSignals.length).toBeGreaterThanOrEqual(2);
+      expect(candidate.practiceContext.resumeEvidenceAnchors.length).toBeGreaterThanOrEqual(2);
+    }
+
+    expect(demoCandidates[0].practiceContext.jobDescriptionSignals).toContain("activation analytics");
+  });
 });
