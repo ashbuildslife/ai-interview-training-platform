@@ -72,6 +72,39 @@ function detectScriptedLanguage(transcript: TranscriptTurn[]): string | null {
   return `Detected ${hits.length} scripted-sounding phrase(s): ${phrases}. Answers may sound rehearsed or AI-polished rather than authentic.`;
 }
 
+const CASUAL_SPEECH_MARKERS = [
+  /\b(?:um|uh|er|hmm)\b/i,
+  /\b(?:you know|I mean|like|sort of|kind of|basically|honestly|actually)\b/i,
+  /\b(?:I think|I'd say|I guess|I feel like|I suppose|maybe|probably)\b/i,
+  /\.{2,}/,
+  /—/,
+  /, like, /i
+];
+
+function detectOverPolishedText(transcript: TranscriptTurn[]): string | null {
+  const candidateText = transcript
+    .filter((turn) => turn.speaker === "candidate")
+    .map((turn) => turn.text)
+    .join(" ");
+
+  if (candidateText.length < 200) return null;
+
+  const hasNaturalMarker = CASUAL_SPEECH_MARKERS.some((pattern) =>
+    pattern.test(candidateText)
+  );
+
+  if (!hasNaturalMarker) {
+    return (
+      "Answer reads as unusually polished with no conversational markers " +
+      "(hesitations, reformulations, or hedging phrases). " +
+      "In 2026, hiring managers increasingly flag flawlessly structured answers " +
+      "as potential AI assistance — candidates benefit from preserving natural delivery."
+    );
+  }
+
+  return null;
+}
+
 export function createMockInterviewAiProvider(): InterviewAiProvider {
   return {
     provider: "mock",
@@ -104,6 +137,11 @@ export function createMockInterviewAiProvider(): InterviewAiProvider {
       const scriptedFlag = detectScriptedLanguage(request.transcript);
       if (scriptedFlag) {
         risks.push(scriptedFlag);
+      }
+
+      const overPolishedFlag = detectOverPolishedText(request.transcript);
+      if (overPolishedFlag) {
+        risks.push(overPolishedFlag);
       }
 
       return {

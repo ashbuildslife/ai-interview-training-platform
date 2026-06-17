@@ -96,3 +96,67 @@ describe("mock interview AI provider", () => {
     expect(scriptedRisks[0]).toContain("rehearsed");
   });
 });
+
+describe("mock interview AI provider — over-polished detection", () => {
+  it("flags flawless answers with no conversational markers as over-polished", async () => {
+    const provider = createMockInterviewAiProvider();
+    const polishedTranscript = transcriptWithCandidateAnswer(
+      "I identified the core bottleneck in our onboarding funnel. " +
+      "The activation rate had remained flat for three consecutive quarters. " +
+      "I proposed a structured experiment framework with four treatment arms. " +
+      "The winning variant reduced time-to-first-value by 28 percent, " +
+      "and I presented the results to the executive team with a written recommendation. " +
+      "We adopted the change across all product lines the following quarter."
+    );
+
+    const report = await provider.generateFeedbackReport({
+      session: demoInterviewSession,
+      transcript: polishedTranscript
+    });
+
+    const overPolishedRisks = report.risks.filter((risk) =>
+      risk.includes("unusually polished")
+    );
+    expect(overPolishedRisks.length).toBeGreaterThanOrEqual(1);
+    expect(overPolishedRisks[0]).toContain("conversational markers");
+    expect(overPolishedRisks[0]).toContain("hiring managers");
+  });
+
+  it("does not flag natural-sounding answers with casual speech markers as over-polished", async () => {
+    const provider = createMockInterviewAiProvider();
+    const naturalTranscript = transcriptWithCandidateAnswer(
+      "Um, so I think the main problem, you know, was that nobody actually owned the funnel. " +
+      "I mean, sales had their version, product had theirs — and honestly, " +
+      "I sort of just started mapping it out because, like, it was blocking everything. " +
+      "We ended up reducing the time-to-value by about 34% which was, uh, pretty solid. " +
+      "I'd say the hardest part was getting everyone to agree on a shared metric."
+    );
+
+    const report = await provider.generateFeedbackReport({
+      session: demoInterviewSession,
+      transcript: naturalTranscript
+    });
+
+    const overPolishedRisks = report.risks.filter((risk) =>
+      risk.includes("unusually polished")
+    );
+    expect(overPolishedRisks).toHaveLength(0);
+  });
+
+  it("does not flag short answers (under 200 chars) as over-polished", async () => {
+    const provider = createMockInterviewAiProvider();
+    const shortTranscript = transcriptWithCandidateAnswer(
+      "I led the onboarding redesign and we shipped it in four weeks."
+    );
+
+    const report = await provider.generateFeedbackReport({
+      session: demoInterviewSession,
+      transcript: shortTranscript
+    });
+
+    const overPolishedRisks = report.risks.filter((risk) =>
+      risk.includes("unusually polished")
+    );
+    expect(overPolishedRisks).toHaveLength(0);
+  });
+});
