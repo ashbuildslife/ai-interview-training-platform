@@ -95,6 +95,26 @@ describe("mock interview AI provider", () => {
     expect(scriptedRisks.length).toBeGreaterThanOrEqual(1);
     expect(scriptedRisks[0]).toContain("rehearsed");
   });
+  it("connects scripted language risks to candidate target role and practice context", async () => {
+    const provider = createMockInterviewAiProvider();
+    const buzzwordTranscript = transcriptWithCandidateAnswer(
+      "I believe that we leveraged synergies across the organization to drive alignment. What I would say is that passionate about moving the needle, we were able to circle back and deep dive into the low-hanging fruit."
+    );
+
+    const report = await provider.generateFeedbackReport({
+      session: demoInterviewSession,
+      transcript: buzzwordTranscript
+    });
+
+    const scriptedRisks = report.risks.filter((risk) =>
+      risk.includes("scripted")
+    );
+    expect(scriptedRisks.length).toBeGreaterThanOrEqual(1);
+    expect(scriptedRisks[0]).toContain("Product Manager");
+    expect(scriptedRisks[0]).toContain("activation analytics");
+    expect(scriptedRisks[0]).toContain("rehearsed corporate language");
+  });
+
 });
 
 describe("mock interview AI provider — over-polished detection", () => {

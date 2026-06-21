@@ -1,4 +1,4 @@
-import { questionBank, rubricCategories } from "../demo-data";
+import { findCandidate, questionBank, rubricCategories } from "../demo-data";
 import type {
   FeedbackReport,
   FeedbackReportRequest,
@@ -129,6 +129,11 @@ export function createMockInterviewAiProvider(): InterviewAiProvider {
       const rubricScores = buildRubricScores(request.transcript);
       const total = rubricScores.reduce((sum, score) => sum + score.score, 0);
 
+      const candidate = findCandidate(request.session.candidateId);
+      const roleHint = candidate
+        ? ` For ${candidate.targetRole} practice, ${candidate.practiceContext.jobDescriptionSignals.slice(0, 2).join(" and ")} signals carry more weight than rehearsed corporate language.`
+        : "";
+
       const risks: string[] = [
         "Opening setup runs long before the action/result appears.",
         "Could make the rejected alternative and stakeholder alignment clearer."
@@ -136,12 +141,12 @@ export function createMockInterviewAiProvider(): InterviewAiProvider {
 
       const scriptedFlag = detectScriptedLanguage(request.transcript);
       if (scriptedFlag) {
-        risks.push(scriptedFlag);
+        risks.push(`${scriptedFlag}${roleHint}`);
       }
 
       const overPolishedFlag = detectOverPolishedText(request.transcript);
       if (overPolishedFlag) {
-        risks.push(overPolishedFlag);
+        risks.push(`${overPolishedFlag}${roleHint}`);
       }
 
       return {
