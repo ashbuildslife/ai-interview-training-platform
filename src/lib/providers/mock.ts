@@ -105,6 +105,33 @@ function detectOverPolishedText(transcript: TranscriptTurn[]): string | null {
   return null;
 }
 
+function detectWeakPersonalContribution(transcript: TranscriptTurn[]): string | null {
+  const candidateText = transcript
+    .filter((turn) => turn.speaker === "candidate")
+    .map((turn) => turn.text)
+    .join(" ");
+
+  if (candidateText.length < 120) return null;
+
+  const namesPersonalAction = /\b(?:I|my)\s+(?:led|owned|built|decided|designed|shipped|measured|prioritized|mapped|changed|created|implemented|proposed|chose|rejected|validated|interviewed|analyzed|presented)\b/i.test(
+    candidateText
+  );
+  const leansOnTeamOutcome = /\b(?:we|the team|our team)\s+(?:delivered|shipped|built|improved|reduced|increased|launched|implemented|drove|created|adopted)\b/i.test(
+    candidateText
+  );
+
+  if (leansOnTeamOutcome && !namesPersonalAction) {
+    return (
+      "Personal contribution is hard to verify: the answer leans on team-level outcomes " +
+      "without naming the candidate's own decision, action, or evidence. " +
+      "Recruiters probing AI-assisted answers will ask what they personally owned and " +
+      "how their resume proof maps to the claim."
+    );
+  }
+
+  return null;
+}
+
 export function createMockInterviewAiProvider(): InterviewAiProvider {
   return {
     provider: "mock",
@@ -147,6 +174,11 @@ export function createMockInterviewAiProvider(): InterviewAiProvider {
       const overPolishedFlag = detectOverPolishedText(request.transcript);
       if (overPolishedFlag) {
         risks.push(`${overPolishedFlag}${roleHint}`);
+      }
+
+      const personalContributionFlag = detectWeakPersonalContribution(request.transcript);
+      if (personalContributionFlag) {
+        risks.push(`${personalContributionFlag}${roleHint}`);
       }
 
       return {

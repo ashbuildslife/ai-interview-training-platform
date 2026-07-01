@@ -180,3 +180,45 @@ describe("mock interview AI provider — over-polished detection", () => {
     expect(overPolishedRisks).toHaveLength(0);
   });
 });
+
+
+describe("mock interview AI provider — personal contribution clarity", () => {
+  it("flags team-level answers that hide the candidate's personal contribution", async () => {
+    const provider = createMockInterviewAiProvider();
+    const teamOnlyTranscript = transcriptWithCandidateAnswer(
+      "We improved activation by 31% after the team shipped a redesigned onboarding path. " +
+      "The team aligned sales, product, and support around one funnel metric. " +
+      "We launched three experiments and reduced time-to-value by two weeks while the organization adopted the new process."
+    );
+
+    const report = await provider.generateFeedbackReport({
+      session: demoInterviewSession,
+      transcript: teamOnlyTranscript
+    });
+
+    const contributionRisks = report.risks.filter((risk) =>
+      risk.includes("Personal contribution is hard to verify")
+    );
+    expect(contributionRisks.length).toBeGreaterThanOrEqual(1);
+    expect(contributionRisks[0]).toContain("personally owned");
+    expect(contributionRisks[0]).toContain("AI-assisted answers");
+  });
+
+  it("does not flag team outcomes when the candidate names their own action", async () => {
+    const provider = createMockInterviewAiProvider();
+    const personallyAnchoredTranscript = transcriptWithCandidateAnswer(
+      "I mapped the onboarding funnel, interviewed five sales reps, and decided which step to remove first. " +
+      "We reduced time-to-value by two weeks after I presented the rollout plan to support and product leads."
+    );
+
+    const report = await provider.generateFeedbackReport({
+      session: demoInterviewSession,
+      transcript: personallyAnchoredTranscript
+    });
+
+    const contributionRisks = report.risks.filter((risk) =>
+      risk.includes("Personal contribution is hard to verify")
+    );
+    expect(contributionRisks).toHaveLength(0);
+  });
+});
