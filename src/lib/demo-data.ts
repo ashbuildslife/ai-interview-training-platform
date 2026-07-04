@@ -107,6 +107,16 @@ export const questionBank: QuestionBankItem[] = [
     rubricFocus: ["Role Depth", "Communication"]
   },
   {
+    id: "q_career_pivot_narrative",
+    title: "Non-linear career narrative",
+    prompt:
+      "You are pivoting from founder/operator experience into this role. Which transferable evidence maps to the job description, and what gap will you address in your first 30 days?",
+    roleFocus: "Career changers",
+    difficulty: "intermediate",
+    tags: ["career-changer", "transferable-evidence", "non-linear-path"],
+    rubricFocus: ["Role Depth", "Structure", "Coachability"]
+  },
+  {
     id: "q_coachability_followup",
     title: "Coachability follow-up",
     prompt:
@@ -207,7 +217,7 @@ export const demoSessions: InterviewSession[] = [
     status: "scheduled",
     scheduledFor: "2026-06-03",
     durationMinutes: 30,
-    selectedQuestionIds: ["q_behavioral_ownership", "q_coachability_followup"],
+    selectedQuestionIds: ["q_career_pivot_narrative", "q_behavioral_ownership", "q_coachability_followup"],
     followUpMode: "mock_ai"
   }
 ];

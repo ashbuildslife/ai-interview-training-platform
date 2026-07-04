@@ -4,7 +4,7 @@ import {
   buildCandidateProgressTimeline,
   computeAdminAnalytics
 } from "@/lib/analytics";
-import { demoCandidates, demoSessions } from "@/lib/demo-data";
+import { demoCandidates, demoSessions, questionBank } from "@/lib/demo-data";
 
 describe("admin analytics", () => {
   it("summarizes candidate role coverage, completion rate, and average score", () => {
@@ -45,6 +45,16 @@ describe("admin analytics", () => {
 
     expect(demoCandidates[0].practiceContext.jobDescriptionSignals).toContain("activation analytics");
     expect(demoCandidates[0].practiceContext.companyResearchSignals).toContain("usage-based pricing motion");
+  });
+
+  it("includes career-narrative practice for non-linear candidates", () => {
+    const careerNarrativeQuestion = questionBank.find((question) => question.tags.includes("career-changer"));
+    const lenaFollowUp = demoSessions.find((session) => session.id === "sess_lena_followup");
+
+    expect(careerNarrativeQuestion?.prompt.toLowerCase()).toContain("transferable evidence");
+    expect(careerNarrativeQuestion?.prompt.toLowerCase()).toContain("job description");
+    expect(careerNarrativeQuestion?.tags).toContain("non-linear-path");
+    expect(lenaFollowUp?.selectedQuestionIds).toContain("q_career_pivot_narrative");
   });
 
   it("flags generic or under-evidenced practice context before sessions become canned", () => {
