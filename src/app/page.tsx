@@ -130,7 +130,7 @@ export default async function Home() {
     transcript: demoTranscript
   });
   const report = await provider.generateFeedbackReport({ session: demoInterviewSession, transcript: demoTranscript });
-  const analytics = computeAdminAnalytics({ candidates: demoCandidates, sessions: demoSessions });
+  const analytics = computeAdminAnalytics({ candidates: demoCandidates, sessions: demoSessions, questions: questionBank });
   const progress = buildCandidateProgressTimeline({ candidateId: "cand_maya", sessions: demoSessions });
   const activeQuestions = questionsForSession(demoInterviewSession);
 
@@ -339,6 +339,12 @@ export default async function Home() {
               <p className="text-sm text-emerald-700">Context ready</p>
               <p className="text-3xl font-black text-emerald-900">
                 {analytics.practiceContextReadyCandidates}/{analytics.totalCandidates}
+              </p>
+            </div>
+            <div className="rounded-2xl bg-indigo-50 p-4 ring-1 ring-indigo-200">
+              <p className="text-sm text-indigo-700">Format ready</p>
+              <p className="text-3xl font-black text-indigo-900">
+                {analytics.formatReadyUpcomingSessions}/{analytics.formatCheckedUpcomingSessions}
               </p>
             </div>
           </div>

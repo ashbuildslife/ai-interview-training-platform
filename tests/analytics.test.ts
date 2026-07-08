@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   auditCandidatePracticeContext,
+  auditSessionInterviewFormatReadiness,
   buildCandidateProgressTimeline,
   computeAdminAnalytics
 } from "@/lib/analytics";
@@ -10,7 +11,8 @@ describe("admin analytics", () => {
   it("summarizes candidate role coverage, completion rate, and average score", () => {
     const analytics = computeAdminAnalytics({
       candidates: demoCandidates,
-      sessions: demoSessions
+      sessions: demoSessions,
+      questions: questionBank
     });
 
     expect(analytics.totalCandidates).toBe(3);
@@ -22,6 +24,9 @@ describe("admin analytics", () => {
     });
     expect(analytics.practiceContextReadyCandidates).toBe(3);
     expect(analytics.practiceContextGaps).toEqual([]);
+    expect(analytics.formatCheckedUpcomingSessions).toBe(1);
+    expect(analytics.formatReadyUpcomingSessions).toBe(1);
+    expect(analytics.interviewFormatGaps).toEqual([]);
   });
 
   it("builds a chronological progress timeline for one candidate", () => {
@@ -45,6 +50,38 @@ describe("admin analytics", () => {
 
     expect(demoCandidates[0].practiceContext.jobDescriptionSignals).toContain("activation analytics");
     expect(demoCandidates[0].practiceContext.companyResearchSignals).toContain("usage-based pricing motion");
+  });
+
+  it("checks upcoming sessions against the candidate interview format", () => {
+    const scheduledBehavioralSession = demoSessions.find((session) => session.id === "sess_lena_followup");
+
+    if (!scheduledBehavioralSession) {
+      throw new Error("Missing scheduled behavioral demo session");
+    }
+
+    expect(
+      auditSessionInterviewFormatReadiness({
+        candidates: demoCandidates,
+        sessions: demoSessions,
+        questions: questionBank
+      })
+    ).toEqual([]);
+
+    expect(
+      auditSessionInterviewFormatReadiness({
+        candidates: demoCandidates,
+        sessions: [{ ...scheduledBehavioralSession, id: "sess_lena_misaligned", selectedQuestionIds: ["q_product_strategy"] }],
+        questions: questionBank
+      })
+    ).toEqual([
+      {
+        sessionId: "sess_lena_misaligned",
+        candidateId: "cand_lena",
+        interviewFormat: "behavioral_loop",
+        missing: ["format_question_alignment"],
+        requiredQuestionSignals: ["behavioral", "coachability", "career-changer"]
+      }
+    ]);
   });
 
   it("includes career-narrative practice for non-linear candidates", () => {
