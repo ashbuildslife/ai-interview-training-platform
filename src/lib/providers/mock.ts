@@ -132,6 +132,29 @@ function detectWeakPersonalContribution(transcript: TranscriptTurn[]): string | 
   return null;
 }
 
+function detectMissingReflection(transcript: TranscriptTurn[]): string | null {
+  const candidateText = transcript
+    .filter((turn) => turn.speaker === "candidate")
+    .map((turn) => turn.text)
+    .join(" ");
+
+  if (candidateText.length < 120) return null;
+
+  const namesReflection = /\b(?:I learned|I would do differently|I'd do differently|next time|in hindsight|since then|changed how I)\b/i.test(
+    candidateText
+  );
+
+  if (!namesReflection) {
+    return (
+      "Reflection is missing: the answer gives context, action, or outcome without naming " +
+      "what the candidate learned or would change next time. Add one concise lesson so the " +
+      "STAR story shows adaptability instead of sounding memorized."
+    );
+  }
+
+  return null;
+}
+
 export function createMockInterviewAiProvider(): InterviewAiProvider {
   return {
     provider: "mock",
@@ -179,6 +202,11 @@ export function createMockInterviewAiProvider(): InterviewAiProvider {
       const personalContributionFlag = detectWeakPersonalContribution(request.transcript);
       if (personalContributionFlag) {
         risks.push(`${personalContributionFlag}${roleHint}`);
+      }
+
+      const missingReflectionFlag = detectMissingReflection(request.transcript);
+      if (missingReflectionFlag) {
+        risks.push(`${missingReflectionFlag}${roleHint}`);
       }
 
       return {

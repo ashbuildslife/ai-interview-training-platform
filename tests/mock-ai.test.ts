@@ -222,3 +222,40 @@ describe("mock interview AI provider — personal contribution clarity", () => {
     expect(contributionRisks).toHaveLength(0);
   });
 });
+
+describe("mock interview AI provider — STAR reflection", () => {
+  it("flags developed answers that omit a lesson or next-time adjustment", async () => {
+    const provider = createMockInterviewAiProvider();
+    const noReflectionTranscript = transcriptWithCandidateAnswer(
+      "I mapped the onboarding funnel, interviewed five sales reps, and decided which step to remove first. " +
+      "I presented the rollout plan to support and product leads, and we reduced time-to-value by two weeks. " +
+      "The change increased activation by 31% across the next three customer cohorts."
+    );
+
+    const report = await provider.generateFeedbackReport({
+      session: demoInterviewSession,
+      transcript: noReflectionTranscript
+    });
+
+    const reflectionRisks = report.risks.filter((risk) => risk.includes("Reflection is missing"));
+    expect(reflectionRisks).toHaveLength(1);
+    expect(reflectionRisks[0]).toContain("would change next time");
+  });
+
+  it("accepts a concise reflection grounded in what the candidate learned", async () => {
+    const provider = createMockInterviewAiProvider();
+    const reflectiveTranscript = transcriptWithCandidateAnswer(
+      "I mapped the onboarding funnel, interviewed five sales reps, and decided which step to remove first. " +
+      "I presented the rollout plan to support and product leads, and we reduced time-to-value by two weeks. " +
+      "I learned to agree on the decision metric before proposing experiments, and since then I start every rollout that way."
+    );
+
+    const report = await provider.generateFeedbackReport({
+      session: demoInterviewSession,
+      transcript: reflectiveTranscript
+    });
+
+    const reflectionRisks = report.risks.filter((risk) => risk.includes("Reflection is missing"));
+    expect(reflectionRisks).toHaveLength(0);
+  });
+});
