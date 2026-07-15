@@ -64,6 +64,34 @@ describe("mock interview AI provider", () => {
     expect(report.recommendedPractice).toContain("STAR");
   });
 
+  it("recognizes written percentages as measurable result evidence", async () => {
+    const provider = createMockInterviewAiProvider();
+    const report = await provider.generateFeedbackReport({
+      session: demoInterviewSession,
+      transcript: transcriptWithCandidateAnswer(
+        "I owned the onboarding experiment and increased activation by 28 percent after testing two alternatives."
+      )
+    });
+    const communication = report.rubricScores.find((score) => score.category === "Communication");
+
+    expect(communication?.score).toBe(22);
+    expect(communication?.evidence).toContain("28 percent");
+  });
+
+  it("does not award quantitative evidence credit for a vague improvement claim", async () => {
+    const provider = createMockInterviewAiProvider();
+    const report = await provider.generateFeedbackReport({
+      session: demoInterviewSession,
+      transcript: transcriptWithCandidateAnswer(
+        "I owned the onboarding redesign, aligned the team, and significantly increased activation after launch."
+      )
+    });
+    const communication = report.rubricScores.find((score) => score.category === "Communication");
+
+    expect(communication?.score).toBe(18);
+    expect(communication?.evidence).toBe("Needs one sharper measurable outcome.");
+  });
+
   it("does not flag scripted language when transcript uses concrete evidence", async () => {
     const provider = createMockInterviewAiProvider();
 

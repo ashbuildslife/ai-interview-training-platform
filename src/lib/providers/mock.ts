@@ -14,18 +14,35 @@ function latestCandidateAnswer(transcript: TranscriptTurn[]): string {
   return answers.at(-1)?.text ?? "";
 }
 
-function extractMetricEvidence(transcript: TranscriptTurn[]): string {
-  const allCandidateAnswers = transcript
+const QUANTIFIED_OUTCOME_PATTERNS = [
+  /\b\d+(?:\.\d+)?\s*(?:%|percent\b)/i,
+  /\b\d+(?:\.\d+)?x\b/i,
+  /[$£€]\s?\d+(?:\.\d+)?(?:\s?[kmb])?\b/i,
+  /\b\d+(?:\.\d+)?\s+(?:weeks?|months?|days?|hours?|minutes?)\b/i
+];
+
+function findQuantifiedOutcome(transcript: TranscriptTurn[]): string | null {
+  const candidateText = transcript
     .filter((turn) => turn.speaker === "candidate")
     .map((turn) => turn.text)
     .join(" ");
-  const metricMatch = allCandidateAnswers.match(/\b\d+%|\b\d+\s+(weeks|months|days)\b/i);
-  return metricMatch ? `Uses measurable evidence: ${metricMatch[0]}.` : "Needs one sharper measurable outcome.";
+
+  for (const pattern of QUANTIFIED_OUTCOME_PATTERNS) {
+    const match = candidateText.match(pattern);
+    if (match) return match[0];
+  }
+
+  return null;
+}
+
+function extractMetricEvidence(transcript: TranscriptTurn[]): string {
+  const metric = findQuantifiedOutcome(transcript);
+  return metric ? `Uses measurable evidence: ${metric}.` : "Needs one sharper measurable outcome.";
 }
 
 function buildRubricScores(transcript: TranscriptTurn[]): RubricScore[] {
   const joined = transcript.map((turn) => turn.text.toLowerCase()).join(" ");
-  const hasMetric = /\d+%|reduced|increased|target|metric/.test(joined);
+  const hasMetric = findQuantifiedOutcome(transcript) !== null;
   const hasTradeoff = /trade-off|tradeoff|separated|priorit|option/.test(joined);
   const hasOwnership = /ownership|owned|shared target|moved/.test(joined);
 
