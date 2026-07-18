@@ -125,6 +125,16 @@ export const questionBank: QuestionBankItem[] = [
     difficulty: "foundational",
     tags: ["coachability", "reflection", "growth"],
     rubricFocus: ["Coachability", "Communication"]
+  },
+  {
+    id: "q_closing_questions",
+    title: "Role-specific closing questions",
+    prompt:
+      "Using one company research signal and one success criterion from the job description, ask two thoughtful closing questions that help you evaluate the role and team.",
+    roleFocus: "All roles",
+    difficulty: "foundational",
+    tags: ["closing", "company-research", "two-way-fit"],
+    rubricFocus: ["Communication", "Role Depth"]
   }
 ];
 
@@ -217,7 +227,12 @@ export const demoSessions: InterviewSession[] = [
     status: "scheduled",
     scheduledFor: "2026-06-03",
     durationMinutes: 30,
-    selectedQuestionIds: ["q_career_pivot_narrative", "q_behavioral_ownership", "q_coachability_followup"],
+    selectedQuestionIds: [
+      "q_career_pivot_narrative",
+      "q_behavioral_ownership",
+      "q_coachability_followup",
+      "q_closing_questions"
+    ],
     followUpMode: "mock_ai"
   }
 ];

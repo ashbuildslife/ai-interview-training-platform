@@ -94,6 +94,17 @@ describe("admin analytics", () => {
     expect(lenaFollowUp?.selectedQuestionIds).toContain("q_career_pivot_narrative");
   });
 
+  it("includes company- and role-specific closing-question practice", () => {
+    const closingQuestion = questionBank.find((question) => question.id === "q_closing_questions");
+    const lenaFollowUp = demoSessions.find((session) => session.id === "sess_lena_followup");
+
+    expect(closingQuestion?.prompt.toLowerCase()).toContain("company research signal");
+    expect(closingQuestion?.prompt.toLowerCase()).toContain("success criterion");
+    expect(closingQuestion?.prompt.toLowerCase()).toContain("evaluate the role and team");
+    expect(closingQuestion?.tags).toContain("two-way-fit");
+    expect(lenaFollowUp?.selectedQuestionIds).toContain("q_closing_questions");
+  });
+
   it("flags generic or under-evidenced practice context before sessions become canned", () => {
     const gaps = auditCandidatePracticeContext([
       ...demoCandidates,
