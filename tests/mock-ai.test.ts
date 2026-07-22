@@ -287,3 +287,40 @@ describe("mock interview AI provider — STAR reflection", () => {
     expect(reflectionRisks).toHaveLength(0);
   });
 });
+
+describe("mock interview AI provider — filler pacing", () => {
+  it("flags repeated fillers when they make a developed answer harder to follow", async () => {
+    const provider = createMockInterviewAiProvider();
+    const fillerHeavyTranscript = transcriptWithCandidateAnswer(
+      "Um, I mean, the onboarding funnel was unclear, and, uh, basically, I started by mapping each handoff. " +
+      "You know, I interviewed sales and support, and, um, I kind of found that every team used a different activation definition. " +
+      "I mean, I set one shared measure, tested two paths, and reduced time-to-value by 24% in six weeks."
+    );
+
+    const report = await provider.generateFeedbackReport({
+      session: demoInterviewSession,
+      transcript: fillerHeavyTranscript
+    });
+
+    const fillerRisks = report.risks.filter((risk) => risk.includes("Frequent filler language"));
+    expect(fillerRisks).toHaveLength(1);
+    expect(fillerRisks[0]).toContain("brief pause");
+  });
+
+  it("allows an occasional filler in an otherwise clear answer", async () => {
+    const provider = createMockInterviewAiProvider();
+    const conversationalTranscript = transcriptWithCandidateAnswer(
+      "Um, I mapped the onboarding funnel and interviewed sales, product, and support to find the conflicting activation definitions. " +
+      "I chose first successful invoice as the shared measure, tested two guided setup paths, and reduced time-to-value by 24% in six weeks. " +
+      "I learned to align teams on the decision metric before proposing experiments."
+    );
+
+    const report = await provider.generateFeedbackReport({
+      session: demoInterviewSession,
+      transcript: conversationalTranscript
+    });
+
+    const fillerRisks = report.risks.filter((risk) => risk.includes("Frequent filler language"));
+    expect(fillerRisks).toHaveLength(0);
+  });
+});

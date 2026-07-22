@@ -122,6 +122,35 @@ function detectOverPolishedText(transcript: TranscriptTurn[]): string | null {
   return null;
 }
 
+const FILLER_PATTERNS = [
+  /\b(?:um+|uh+|er+|hmm+)\b/gi,
+  /\b(?:you know|I mean|kind of|sort of|basically)\b/gi
+];
+
+function detectExcessiveFillerLanguage(transcript: TranscriptTurn[]): string | null {
+  const candidateText = transcript
+    .filter((turn) => turn.speaker === "candidate")
+    .map((turn) => turn.text)
+    .join(" ")
+    .trim();
+  const wordCount = candidateText.split(/\s+/).filter(Boolean).length;
+
+  if (wordCount < 40) return null;
+
+  const fillerCount = FILLER_PATTERNS.reduce(
+    (count, pattern) => count + (candidateText.match(pattern) ?? []).length,
+    0
+  );
+  const fillerRate = fillerCount / wordCount;
+
+  if (fillerCount < 5 || fillerRate < 0.06) return null;
+
+  return (
+    `Frequent filler language (${fillerCount} instances across ${wordCount} words) may obscure the answer. ` +
+    "Replace repeated fillers with a brief pause so the evidence and decision remain easy to follow."
+  );
+}
+
 function detectWeakPersonalContribution(transcript: TranscriptTurn[]): string | null {
   const candidateText = transcript
     .filter((turn) => turn.speaker === "candidate")
@@ -214,6 +243,11 @@ export function createMockInterviewAiProvider(): InterviewAiProvider {
       const overPolishedFlag = detectOverPolishedText(request.transcript);
       if (overPolishedFlag) {
         risks.push(`${overPolishedFlag}${roleHint}`);
+      }
+
+      const fillerFlag = detectExcessiveFillerLanguage(request.transcript);
+      if (fillerFlag) {
+        risks.push(fillerFlag);
       }
 
       const personalContributionFlag = detectWeakPersonalContribution(request.transcript);
