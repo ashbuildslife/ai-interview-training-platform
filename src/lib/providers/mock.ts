@@ -151,6 +151,35 @@ function detectExcessiveFillerLanguage(transcript: TranscriptTurn[]): string | n
   );
 }
 
+const ANSWER_FOCUS_PATTERN = /\b(?:I\s+(?:led|owned|built|decided|designed|shipped|measured|prioritized|mapped|changed|created|implemented|proposed|chose|rejected|validated|interviewed|analyzed|presented|set)|we\s+(?:delivered|shipped|built|improved|reduced|increased|launched|implemented|created|adopted))\b/i;
+const MIN_DEVELOPED_ANSWER_WORDS = 80;
+const MAX_BACKGROUND_WORDS = 45;
+
+function detectDelayedAnswerFocus(transcript: TranscriptTurn[]): string | null {
+  const candidateAnswers = transcript.filter((turn) => turn.speaker === "candidate");
+
+  for (const answer of candidateAnswers) {
+    const text = answer.text.trim();
+    const words = text.split(/\s+/).filter(Boolean);
+    if (words.length < MIN_DEVELOPED_ANSWER_WORDS) continue;
+
+    const focusMatch = text.match(ANSWER_FOCUS_PATTERN);
+    const wordsBeforeFocus = focusMatch?.index === undefined
+      ? words.length
+      : text.slice(0, focusMatch.index).split(/\s+/).filter(Boolean).length;
+
+    if (wordsBeforeFocus > MAX_BACKGROUND_WORDS) {
+      return (
+        `Answer focus arrives late: this ${words.length}-word response does not name the candidate's ` +
+        `action, decision, or result in the first ${MAX_BACKGROUND_WORDS} words. ` +
+        "Front-load the decision, then keep only the background needed to understand it."
+      );
+    }
+  }
+
+  return null;
+}
+
 function detectWeakPersonalContribution(transcript: TranscriptTurn[]): string | null {
   const candidateText = transcript
     .filter((turn) => turn.speaker === "candidate")
@@ -231,9 +260,13 @@ export function createMockInterviewAiProvider(): InterviewAiProvider {
         : "";
 
       const risks: string[] = [
-        "Opening setup runs long before the action/result appears.",
         "Could make the rejected alternative and stakeholder alignment clearer."
       ];
+
+      const delayedFocusFlag = detectDelayedAnswerFocus(request.transcript);
+      if (delayedFocusFlag) {
+        risks.push(delayedFocusFlag);
+      }
 
       const scriptedFlag = detectScriptedLanguage(request.transcript);
       if (scriptedFlag) {

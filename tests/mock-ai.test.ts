@@ -210,6 +210,49 @@ describe("mock interview AI provider — over-polished detection", () => {
 });
 
 
+describe("mock interview AI provider - answer focus", () => {
+  it("flags a developed answer that delays the candidate action behind a long setup", async () => {
+    const provider = createMockInterviewAiProvider();
+    const backgroundHeavyTranscript = transcriptWithCandidateAnswer(
+      "The company had expanded into three markets, and each region used a different onboarding process with separate reporting definitions. " +
+      "Sales focused on signed contracts, support tracked completed setup calls, and product counted the first dashboard visit. " +
+      "Leadership had debated the discrepancy for two quarters while customer complaints increased and several renewal conversations exposed the same confusion. " +
+      "Before the planning cycle, there was still no shared owner, baseline, or decision rule for comparing the regional experiences. " +
+      "I mapped the full funnel, interviewed six account leads, and chose first successful invoice as the shared activation measure. " +
+      "We then reduced time-to-value by 24% in six weeks, and I learned to align the metric before proposing experiments."
+    );
+
+    const report = await provider.generateFeedbackReport({
+      session: demoInterviewSession,
+      transcript: backgroundHeavyTranscript
+    });
+
+    const focusRisks = report.risks.filter((risk) => risk.includes("Answer focus arrives late"));
+    expect(focusRisks).toHaveLength(1);
+    expect(focusRisks[0]).toContain("first 45 words");
+    expect(focusRisks[0]).toContain("Front-load the decision");
+  });
+
+  it("accepts a developed answer that names the candidate action early", async () => {
+    const provider = createMockInterviewAiProvider();
+    const focusedTranscript = transcriptWithCandidateAnswer(
+      "I mapped the onboarding funnel first and chose first successful invoice as the shared activation measure. " +
+      "The company had expanded into three markets, and each region used a different process with separate reporting definitions. " +
+      "I interviewed six account leads, compared the regional experiences, and presented one decision rule to sales, support, and product. " +
+      "We tested two guided setup paths, reduced time-to-value by 24% in six weeks, and increased activation across the next three customer cohorts. " +
+      "I learned to align teams on the decision metric before proposing experiments, and since then I start every rollout that way."
+    );
+
+    const report = await provider.generateFeedbackReport({
+      session: demoInterviewSession,
+      transcript: focusedTranscript
+    });
+
+    const focusRisks = report.risks.filter((risk) => risk.includes("Answer focus arrives late"));
+    expect(focusRisks).toHaveLength(0);
+  });
+});
+
 describe("mock interview AI provider — personal contribution clarity", () => {
   it("flags team-level answers that hide the candidate's personal contribution", async () => {
     const provider = createMockInterviewAiProvider();
