@@ -41,7 +41,22 @@ describe("mock interview AI provider", () => {
 
     expect(first).toEqual(second);
     expect(first.question).toContain("Product Manager");
+    expect(first.question).toContain("first-invoice activation lift");
     expect(first.reason).toContain("ownership");
+    expect(first.reason).toContain("activation analytics");
+  });
+
+  it("falls back to a concrete resume example when candidate context is unavailable", async () => {
+    const provider = createMockInterviewAiProvider();
+    const followUp = await provider.generateFollowUp({
+      session: { ...demoInterviewSession, candidateId: "cand_missing" },
+      questionId: "q_behavioral_ownership",
+      transcript: demoTranscript
+    });
+
+    expect(followUp.question).toContain("Anchor the answer in one concrete resume example.");
+    expect(followUp.question).not.toContain("undefined");
+    expect(followUp.reason).toContain("backed by resume evidence");
   });
 
   it("scores rubric categories and produces a feedback report with next steps", async () => {

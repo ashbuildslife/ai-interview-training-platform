@@ -236,16 +236,25 @@ export function createMockInterviewAiProvider(): InterviewAiProvider {
     async generateFollowUp(request: FollowUpRequest): Promise<FollowUpResponse> {
       const baseQuestion = questionBank.find((question) => question.id === request.questionId);
       const focus = baseQuestion?.tags.includes("ownership") ? "ownership" : baseQuestion?.tags[0] ?? "judgment";
+      const candidate = findCandidate(request.session.candidateId);
+      const jobSignal = candidate?.practiceContext.jobDescriptionSignals[0];
+      const evidenceAnchor = candidate?.practiceContext.resumeEvidenceAnchors[0];
       const answer = latestCandidateAnswer(request.transcript);
       const asksForTradeoff = /trade-off|tradeoff|option|priorit/i.test(answer);
+      const roleContext = jobSignal ? ` on ${jobSignal}` : "";
+      const evidencePrompt = evidenceAnchor
+        ? `Anchor the answer in the resume evidence "${evidenceAnchor}".`
+        : "Anchor the answer in one concrete resume example.";
 
       return {
-        question: `For the ${request.session.targetRole} loop, go one layer deeper: ${
+        question: `For the ${request.session.targetRole} loop, go one layer deeper${roleContext}: ${
           asksForTradeoff
             ? "what signal told you the trade-off was working?"
             : "what trade-off did you make, and how did you know it worked?"
-        }`,
-        reason: `Targets ${focus} because the candidate gave context and outcome, but the coach still needs a sharper decision signal.`,
+        } ${evidencePrompt}`,
+        reason: `Targets ${focus}${
+          jobSignal ? ` and the job signal "${jobSignal}"` : ""
+        } because the candidate gave context and outcome, but the coach still needs a sharper decision signal backed by resume evidence.`,
         coachGuidance:
           "Ask for one metric, one rejected alternative, and one reflection on what the candidate would do differently."
       };
