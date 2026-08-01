@@ -207,6 +207,31 @@ function detectWeakPersonalContribution(transcript: TranscriptTurn[]): string | 
   return null;
 }
 
+const REPEATED_OPENING_WORDS = 8;
+
+function detectRepeatedAnswerOpening(transcript: TranscriptTurn[]): string | null {
+  const openings = transcript
+    .filter((turn) => turn.speaker === "candidate")
+    .map((turn) =>
+      turn.text
+        .toLowerCase()
+        .replace(/[^a-z0-9\s]/g, "")
+        .split(/\s+/)
+        .filter(Boolean)
+        .slice(0, REPEATED_OPENING_WORDS)
+    )
+    .filter((words) => words.length === REPEATED_OPENING_WORDS)
+    .map((words) => words.join(" "));
+
+  if (new Set(openings).size === openings.length) return null;
+
+  return (
+    `Repeated ${REPEATED_OPENING_WORDS}-word opening detected across different answers. ` +
+    "Reusing a memorized lead-in can make the response sound wooden and may hide whether the candidate adapted to the question. " +
+    "Start each answer with the decision or experience that directly fits the prompt."
+  );
+}
+
 function detectMissingReflection(transcript: TranscriptTurn[]): string | null {
   const candidateText = transcript
     .filter((turn) => turn.speaker === "candidate")
@@ -285,6 +310,11 @@ export function createMockInterviewAiProvider(): InterviewAiProvider {
       const overPolishedFlag = detectOverPolishedText(request.transcript);
       if (overPolishedFlag) {
         risks.push(`${overPolishedFlag}${roleHint}`);
+      }
+
+      const repeatedOpeningFlag = detectRepeatedAnswerOpening(request.transcript);
+      if (repeatedOpeningFlag) {
+        risks.push(`${repeatedOpeningFlag}${roleHint}`);
       }
 
       const fillerFlag = detectExcessiveFillerLanguage(request.transcript);

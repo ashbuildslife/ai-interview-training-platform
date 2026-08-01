@@ -24,6 +24,27 @@ function transcriptWithCandidateAnswer(text: string): TranscriptTurn[] {
   ];
 }
 
+function transcriptWithCandidateAnswers(answers: string[]): TranscriptTurn[] {
+  return answers.flatMap((text, index) => [
+    {
+      id: `turn_${index}_coach`,
+      sessionId: "sess_test",
+      speaker: "coach" as const,
+      timestamp: `0${index}:00`,
+      text: index === 0 ? "Tell me about a difficult decision." : "How did you handle a disagreement?",
+      questionId: index === 0 ? "q_decision" : "q_disagreement"
+    },
+    {
+      id: `turn_${index}_candidate`,
+      sessionId: "sess_test",
+      speaker: "candidate" as const,
+      timestamp: `0${index}:20`,
+      text,
+      questionId: index === 0 ? "q_decision" : "q_disagreement"
+    }
+  ]);
+}
+
 describe("mock interview AI provider", () => {
   it("generates deterministic follow-up questions from role, question, and transcript context", async () => {
     const provider = createMockInterviewAiProvider();
@@ -380,5 +401,36 @@ describe("mock interview AI provider — filler pacing", () => {
 
     const fillerRisks = report.risks.filter((risk) => risk.includes("Frequent filler language"));
     expect(fillerRisks).toHaveLength(0);
+  });
+});
+
+describe("mock interview AI provider — answer adaptability", () => {
+  it("flags memorized openings repeated across different interview questions", async () => {
+    const provider = createMockInterviewAiProvider();
+    const report = await provider.generateFeedbackReport({
+      session: demoInterviewSession,
+      transcript: transcriptWithCandidateAnswers([
+        "The most important thing to understand about this situation is that I owned the launch decision and reduced onboarding time by two weeks.",
+        "The most important thing to understand about this situation is that I mapped the disagreement and proposed a shared decision rule."
+      ])
+    });
+
+    const adaptabilityRisks = report.risks.filter((risk) => risk.includes("Repeated 8-word opening"));
+    expect(adaptabilityRisks).toHaveLength(1);
+    expect(adaptabilityRisks[0]).toContain("adapted to the question");
+  });
+
+  it("allows answers that open with question-specific decisions", async () => {
+    const provider = createMockInterviewAiProvider();
+    const report = await provider.generateFeedbackReport({
+      session: demoInterviewSession,
+      transcript: transcriptWithCandidateAnswers([
+        "I paused the launch after the pilot exposed a billing error, then fixed the rollout plan with finance.",
+        "I mapped the disagreement to two competing success metrics and proposed a shared decision rule."
+      ])
+    });
+
+    const adaptabilityRisks = report.risks.filter((risk) => risk.includes("Repeated 8-word opening"));
+    expect(adaptabilityRisks).toHaveLength(0);
   });
 });
