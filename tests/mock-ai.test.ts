@@ -434,3 +434,60 @@ describe("mock interview AI provider — answer adaptability", () => {
     expect(adaptabilityRisks).toHaveLength(0);
   });
 });
+
+describe("mock interview AI provider — answer length", () => {
+  const ramblingAnswer = [
+    "When I first joined the team, the onboarding funnel was not very well understood, and nobody could agree on where new customers were actually dropping off during their first two weeks.",
+    "I spent the first month talking to people across sales, support, product, and customer success, and I also interviewed a handful of churned customers to understand the journey from their perspective.",
+    "Every team had its own dashboard, its own metrics, and its own favorite explanation for why activation looked flat, so there were competing narratives everywhere I turned.",
+    "I pulled together journey maps, reviewed the analytics, compared cohorts across three quarters, and gradually built a shared picture of where the real friction lived in the flow.",
+    "After several workshops and a few rounds of debate, I proposed that we adopt first successful invoice as the single shared activation measure that every team would report against.",
+    "We tested two guided setup paths over the following six weeks, and the winning variant reduced time-to-value by about 24 percent, which leadership agreed was a meaningful improvement.",
+    "I then documented the decision, rolled it out to the remaining customer cohorts, and presented the results to the executive team with a written recommendation for the next iteration.",
+    "Along the way I also created a weekly activation review so the metric stayed visible to every team after the experiment wrapped.",
+    "Looking back on the whole experience, I learned that aligning everyone on the decision metric early saves a lot of circular debate later, and since then I start every rollout that way."
+  ].join(" ");
+
+  it("flags a single answer that rambles past the two-minute mark", async () => {
+    const provider = createMockInterviewAiProvider();
+    expect(ramblingAnswer.split(/\s+/).filter(Boolean).length).toBeGreaterThan(250);
+
+    const report = await provider.generateFeedbackReport({
+      session: demoInterviewSession,
+      transcript: transcriptWithCandidateAnswer(ramblingAnswer)
+    });
+
+    const lengthRisks = report.risks.filter((risk) => risk.includes("Answer runs long"));
+    expect(lengthRisks).toHaveLength(1);
+    expect(lengthRisks[0]).toContain("two-minute mark");
+    expect(lengthRisks[0]).toContain("roughly 200 words");
+  });
+
+  it("does not flag a focused answer of normal coaching length", async () => {
+    const provider = createMockInterviewAiProvider();
+    const report = await provider.generateFeedbackReport({
+      session: demoInterviewSession,
+      transcript: transcriptWithCandidateAnswer(
+        "I mapped the onboarding funnel first and chose first successful invoice as the shared activation measure. " +
+        "The company had expanded into three markets, and each region used a different process with separate reporting definitions. " +
+        "I interviewed six account leads, compared the regional experiences, and presented one decision rule to sales, support, and product. " +
+        "We tested two guided setup paths, reduced time-to-value by 24% in six weeks, and increased activation across the next three customer cohorts. " +
+        "I learned to align teams on the decision metric before proposing experiments, and since then I start every rollout that way."
+      )
+    });
+
+    const lengthRisks = report.risks.filter((risk) => risk.includes("Answer runs long"));
+    expect(lengthRisks).toHaveLength(0);
+  });
+
+  it("does not flag the demo transcript as rambling", async () => {
+    const provider = createMockInterviewAiProvider();
+    const report = await provider.generateFeedbackReport({
+      session: demoInterviewSession,
+      transcript: demoTranscript
+    });
+
+    const lengthRisks = report.risks.filter((risk) => risk.includes("Answer runs long"));
+    expect(lengthRisks).toHaveLength(0);
+  });
+});

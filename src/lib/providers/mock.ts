@@ -232,6 +232,25 @@ function detectRepeatedAnswerOpening(transcript: TranscriptTurn[]): string | nul
   );
 }
 
+const MAX_SINGLE_ANSWER_WORDS = 250;
+
+function detectRamblingAnswerLength(transcript: TranscriptTurn[]): string | null {
+  const candidateAnswers = transcript.filter((turn) => turn.speaker === "candidate");
+
+  for (const answer of candidateAnswers) {
+    const words = answer.text.split(/\s+/).filter(Boolean);
+    if (words.length > MAX_SINGLE_ANSWER_WORDS) {
+      return (
+        `Answer runs long: one response spans ${words.length} words, past the two-minute mark most coaches recommend for a single answer. ` +
+        "Long answers lose the interviewer before the decision and metric land. " +
+        "Trim the setup and keep the decision, measurable result, and lesson inside roughly 200 words."
+      );
+    }
+  }
+
+  return null;
+}
+
 function detectMissingReflection(transcript: TranscriptTurn[]): string | null {
   const candidateText = transcript
     .filter((turn) => turn.speaker === "candidate")
@@ -330,6 +349,11 @@ export function createMockInterviewAiProvider(): InterviewAiProvider {
       const missingReflectionFlag = detectMissingReflection(request.transcript);
       if (missingReflectionFlag) {
         risks.push(`${missingReflectionFlag}${roleHint}`);
+      }
+
+      const ramblingFlag = detectRamblingAnswerLength(request.transcript);
+      if (ramblingFlag) {
+        risks.push(`${ramblingFlag}${roleHint}`);
       }
 
       return {
